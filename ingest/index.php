@@ -7,7 +7,9 @@ if (isset($_POST['submit']))
     $mascot = $_POST['mascot'];
 		$location = $_POST['location'];
     $foo = $_POST['foo'];
+
 }
+
 ?>
 <html>
 
@@ -115,6 +117,25 @@ if (isset($_POST['submit']))
       echo $result2;
       echo "<br>";
     }
+
+
+    $redisUrl = "redis-server";
+    //Connecting to Redis server on localhost 
+    $redis = new Redis(); 
+    echo "connecting to redis...";
+    echo "<br>";
+    $redis->connect($redisUrl); 
+    echo "Connection to server sucessfully"; 
+    echo "<br>";
+    //store data in redis list 
+    $redis->lpush("tutorial-list", "Redis"); 
+    $redis->lpush("tutorial-list", "Mongodb"); 
+    $redis->lpush("tutorial-list", "Mysql");  
+    
+    // Get the stored data and print it 
+    $arList = $redis->lrange("tutorial-list", 0 ,5); 
+    echo "Stored string in redis:: "; 
+    print_r($arList); 
   
 	}
 	?>
