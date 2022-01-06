@@ -1,18 +1,9 @@
-<!-- <html>
- <head>
-  <title>PHP Test</title>
- </head>
- <body>
- <?php echo '<p>Hello World</p>'; ?> 
- </body>
-</html> -->
-
 
 <?php
 if (isset($_POST['submit']))
 {
 		$method = $_POST['method'];
-		$url = $_POST['url'];
+		$urlInput = "http://sample_domain_endpoint.com/data?title={mascot}&image={location}&foo={bar}";
     $mascot = $_POST['mascot'];
 		$location = $_POST['location'];
     $foo = $_POST['foo'];
@@ -21,11 +12,11 @@ if (isset($_POST['submit']))
 <html>
 
 <head>
-	<title>Simple Form Processing</title>
+	<title>PHP Ingestion Agent</title>
 </head>
 
 <body>
-	<h1>Form Processing using PHP</h1>
+	<h1>PHP Ingestion Agent</h1>
 	<fieldset>
 		<form id="form1" method="post" action="ingest.php">
 			<?php
@@ -44,7 +35,11 @@ if (isset($_POST['submit']))
 				<br>
 				<br>
 				URL:
-				<input type="text" name="url" placeholder="http://sample_domain.com"/>
+				<input type="text" 
+          name="urlInput" 
+          placeholder="http://sample_domain_endpoint.com/data?title={mascot}&image={location}&foo={bar}" 
+          disabled 
+          value="http://sample_domain_endpoint.com/data?title={mascot}&image={location}&foo={bar}"/>
 				<br>
 				<br>
         Mascot:
@@ -67,13 +62,28 @@ if (isset($_POST['submit']))
 	{		
     // $url = 'redis';
     $url = 'https://jsonplaceholder.typicode.com/posts';
-    $data = array('method' => $method, 'url' => $url, 'mascot' => $mascot, 'location' => $location, 'foo' => $foo);
+    $data = array('method' => $method, 'url' => $urlInput, 'mascot' => $mascot, 'location' => $location, 'foo' => $foo);
+    $endpoint = new stdClass();
+    $endpoint->method = $method;
+    $endpoint->url = $urlInput;
+    $dataObj = new stdClass();
+    $dataObj->mascot = $mascot;
+    $dataObj->location = $location;
+    $postDataObj = new stdClass();
+    $postDataObj->endpoint = $endpoint;
+    $postDataObj->data = array($dataObj);
+    $postDataJson = json_encode($postDataObj);
+
+    echo "<br>";
+    echo $postDataJson;
+    echo "<br>";   
 
     $options = array(
       'http' => array(
-          'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
           'method'  => 'POST',
-          'content' => http_build_query($data)
+          'content' => $postDataJson,
+          'header'=> "Content-Type: application/json\r\n" .
+          "Accept: application/json\r\n"
       )
     );
     $context  = stream_context_create($options);
@@ -81,8 +91,11 @@ if (isset($_POST['submit']))
     if ($result === FALSE) { 
       echo "error";
     } else {
+      echo "<br>";
       var_dump($result);
+      echo "<br>";
       echo $result;
+      echo "<br>";
     }
     
     
@@ -98,7 +111,9 @@ if (isset($_POST['submit']))
     if ($result2 === FALSE) {
       echo "Error";
     } else {
+      echo "<br>";
       echo $result2;
+      echo "<br>";
     }
   
 	}
