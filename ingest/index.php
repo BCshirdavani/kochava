@@ -3,7 +3,7 @@
 if (isset($_POST['submit']))
 {
 		$method = $_POST['method'];
-		$urlInput = "http://sample_domain_endpoint.com/data?title={mascot}&image={location}&foo={bar}";
+		$urlInput = 'http://sample_domain_endpoint.com/data?title={mascot}&image={location}&foo={bar}';
     $mascot = $_POST['mascot'];
 		$location = $_POST['location'];
     $foo = $_POST['foo'];
@@ -39,9 +39,9 @@ if (isset($_POST['submit']))
 				URL:
 				<input type="text" 
           name="urlInput" 
-          placeholder="http://sample_domain_endpoint.com/data?title={mascot}&image={location}&foo={bar}" 
+          placeholder='http://sample_domain_endpoint.com/data?title={mascot}&image={location}&foo={bar}' 
           disabled 
-          value="http://sample_domain_endpoint.com/data?title={mascot}&image={location}&foo={bar}"/>
+          value='http://sample_domain_endpoint.com/data?title={mascot}&image={location}&foo={bar}'/>
 				<br>
 				<br>
         Mascot:
@@ -49,7 +49,7 @@ if (isset($_POST['submit']))
 				<br>
 				<br>
         Location:
-        <input type="text" name="location" placeholder="https://bloc.golang.org/gopher/gopher.png"/>
+        <input type="text" name="location" placeholder='https://bloc.golang.org/gopher/gopher.png'/>
 				<br>
 				<br>
         Foo:
@@ -76,49 +76,6 @@ if (isset($_POST['submit']))
     $postDataObj->data = array($dataObj);
     $postDataJson = json_encode($postDataObj);
 
-    echo "<br>";
-    echo $postDataJson;
-    echo "<br>";   
-
-    $options = array(
-      'http' => array(
-          'method'  => 'POST',
-          'content' => $postDataJson,
-          'header'=> "Content-Type: application/json\r\n" .
-          "Accept: application/json\r\n"
-      )
-    );
-    $context  = stream_context_create($options);
-    $result = file_get_contents($url, false, $context);
-    if ($result === FALSE) { 
-      echo "error";
-    } else {
-      echo "<br>";
-      var_dump($result);
-      echo "<br>";
-      echo $result;
-      echo "<br>";
-    }
-    
-    
-    $url2 = 'https://jsonplaceholder.typicode.com/todos/1';
-    $options2 = array(
-      'http' => array(
-          'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
-          'method'  => 'GET'
-      )
-    );
-    $context2  = stream_context_create($options2);
-    $result2 = file_get_contents($url2, false, $context2);
-    if ($result2 === FALSE) {
-      echo "Error";
-    } else {
-      echo "<br>";
-      echo $result2;
-      echo "<br>";
-    }
-
-
     $redisUrl = "redis-server";
     //Connecting to Redis server on localhost 
     $redis = new Redis(); 
@@ -128,15 +85,20 @@ if (isset($_POST['submit']))
     echo "Connection to server sucessfully"; 
     echo "<br>";
     //store data in redis list 
-    $redis->lpush("tutorial-list", "Redis"); 
-    $redis->lpush("tutorial-list", "Mongodb"); 
-    $redis->lpush("tutorial-list", "Mysql");  
+    // $redis->rpush("postback-queue", serialize($postDataJson)); 
+    $redis->rpush("postback-queue", $postDataJson); 
+    $channel = "postback-queue-pub-sub";
+    // $redis->publish($channel, serialize($postDataJson));
+    $redis->publish($channel, $postDataJson);
     
     // Get the stored data and print it 
-    $arList = $redis->lrange("tutorial-list", 0 ,5); 
+    $arList = $redis->lrange("postback-queue", 0 ,5); 
+    echo "<br>";
     echo "Stored string in redis:: "; 
     print_r($arList); 
-  
+    echo "<br>";
+    // echo stripslashes($arList[0]);
+    echo "<br>";
 	}
 	?>
 </body>

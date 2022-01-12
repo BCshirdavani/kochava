@@ -6,3 +6,5 @@ services:
     build: ./ingest
     ports:
       - "8080:8080"
+  delivery-go:
+    build: ./delivery
