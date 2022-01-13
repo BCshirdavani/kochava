@@ -62,8 +62,6 @@ if (isset($_POST['submit']))
 	<?php
 	if(isset($_POST['submit']))
 	{		
-    // $url = 'redis';
-    $url = 'https://jsonplaceholder.typicode.com/posts';
     $data = array('method' => $method, 'url' => $urlInput, 'mascot' => $mascot, 'location' => $location, 'foo' => $foo);
     $endpoint = new stdClass();
     $endpoint->method = $method;
@@ -71,6 +69,7 @@ if (isset($_POST['submit']))
     $dataObj = new stdClass();
     $dataObj->mascot = $mascot;
     $dataObj->location = $location;
+		$dataObj->foo = $foo;
     $postDataObj = new stdClass();
     $postDataObj->endpoint = $endpoint;
     $postDataObj->data = array($dataObj);
@@ -79,26 +78,12 @@ if (isset($_POST['submit']))
     $redisUrl = "redis-server";
     //Connecting to Redis server on localhost 
     $redis = new Redis(); 
-    echo "connecting to redis...";
-    echo "<br>";
     $redis->connect($redisUrl); 
-    echo "Connection to server sucessfully"; 
-    echo "<br>";
-    //store data in redis list 
-    // $redis->rpush("postback-queue", serialize($postDataJson)); 
-    $redis->rpush("postback-queue", $postDataJson); 
+    //publish data
     $channel = "postback-queue-pub-sub";
-    // $redis->publish($channel, serialize($postDataJson));
     $redis->publish($channel, $postDataJson);
-    
-    // Get the stored data and print it 
-    $arList = $redis->lrange("postback-queue", 0 ,5); 
     echo "<br>";
-    echo "Stored string in redis:: "; 
-    print_r($arList); 
-    echo "<br>";
-    // echo stripslashes($arList[0]);
-    echo "<br>";
+    echo "postback has been pushed to redis queue";
 	}
 	?>
 </body>

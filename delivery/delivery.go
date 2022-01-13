@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -22,6 +24,7 @@ type Endpoint struct {
 type Data struct {
 	Mascot		string `json:"mascot"`
 	Location 	string `json:"location"`
+	Foo 	string `json:"foo"`
 }
 
 var ctx = context.Background()
@@ -31,34 +34,37 @@ var redisClient = redis.NewClient(&redis.Options{
 })
 
 func main() {
-	log.Println("Hello world!")
-	fmt.Println("hello world from fmt print")
-	subscriber := redisClient.Subscribe(ctx, "postback-queue-pub-sub")
-
-	val1, err1 := redisClient.Get(ctx, "postback-queue-pub-sub").Result()
-	if err1 != nil {
-		fmt.Println("possible error?")
+	// setup logger output file
+	file, err := os.OpenFile("postback.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
 	}
-	fmt.Println("postback-queue-pub-sub", val1)
+	log.SetOutput(file)
 
+	// subscribe to redis channel to get updates
+	subscriber := redisClient.Subscribe(ctx, "postback-queue-pub-sub")
 	for {
 		msg, err := subscriber.ReceiveMessage(ctx)
-		fmt.Println("printing msg:")
-		fmt.Println(msg)
 		if err != nil {
-				panic(err)
+			log.Fatal(err)
+			panic(err)
 		}
 
+		// parse the string from redis
 		var postback Postback
-
 		if err := json.Unmarshal([]byte(msg.Payload), &postback); err != nil {
-				panic(err)
+			log.Fatal(err)
+			panic(err)
 		}
-
-		fmt.Println("Received message from " + msg.Channel + " channel.")
-		fmt.Printf("%+v\n", postback)
-		prettyPostBack := fmt.Sprintf("%#v", postback)
-		log.Println(prettyPostBack)
-		fmt.Println(prettyPostBack)
+		// insert data into url placeholders
+		formattedUrl := strings.Replace(postback.Endpoint.URL, "{mascot}", postback.Data[0].Mascot, 1)
+		formattedUrl = strings.Replace(formattedUrl, "{location}", postback.Data[0].Location, 1)
+		formattedUrl = strings.Replace(formattedUrl, "{bar}", postback.Data[0].Foo, 1)
+		responseToLog := "\n" + postback.Endpoint.Method + "\n" + formattedUrl
+		// log the formatted url
+	
+		fmt.Println("logging:")
+		fmt.Println(responseToLog)
+		log.Println(responseToLog)
 	}
 }
